@@ -2,7 +2,7 @@ from opentrons import protocol_api
 
 metadata = {
     'apiLevel': '2.15',
-    'protocolName': 'Opentrons_Testing',
+    'protocolName': 'ResinKineticStudy_OpentronsOT2',
     'author': "Brison Cowan",
     'description': 'Protocol for transferring and mixing samples.',
     }
