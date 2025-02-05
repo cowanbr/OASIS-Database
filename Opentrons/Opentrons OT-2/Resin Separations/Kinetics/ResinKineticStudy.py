@@ -1,7 +1,7 @@
 from opentrons import protocol_api
 
 metadata = {
-    'apiLevel': '2.15',
+    'apiLevel': '2.18',
     'protocolName': 'ResinKineticStudy_OpentronsOT2',
     'author': "Brison Cowan",
     'description': 'Protocol for transferring and mixing samples.',
@@ -9,17 +9,17 @@ metadata = {
 
 
 def add_parameters(parameters: protocol_api.Parameters):
-    parameters.add_int(variable_name='time_between_samples', display_name='Time between samples (minutes)',
-                       description='Time between each sample collection', default=1, minimum=0, maximum=90)
+    parameters.add_float(variable_name='time_between_samples', display_name='Time between samples (minutes)',
+                         description='Time between each sample collection', default=1, minimum=0, maximum=999)
     parameters.add_int(variable_name='lowest_depth', display_name='Lowest depth (mm)',
                        description='The lowest depth to aspirate from', default=1, minimum=0, maximum=100)
     parameters.add_int(variable_name='middle_depth', display_name='Middle depth (mm)',
                        description='The middle depth to aspirate from', default=30, minimum=0, maximum=100)
     parameters.add_int(variable_name='volume_for_transfer', display_name='Volume for transfer (uL)',
                        description='Volume to transfer from source tube to collection tube', default=100,
-                       minimum=0, maximum=1000)
+                       minimum=0, maximum=300)
     parameters.add_int(variable_name='volume_for_mixing', display_name='Volume for mixing (uL)',
-                       description='Volume to mix in the source tube', default=200, minimum=0, maximum=1000)
+                       description='Volume to mix in the source tube', default=200, minimum=0, maximum=300)
     parameters.add_int(variable_name='number_of_mixes', display_name='Number of mixes',
                        description='Number of times to mix the source tube', default=3, minimum=1, maximum=10)
 
