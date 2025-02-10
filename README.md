@@ -17,6 +17,6 @@ The vision relies on good documentation. Again, if it isn't easy to use, it won'
 
 This is an open access (GPL 3.0 License) repository. That means anyone can access, use, and contribute to the protocols. Community contributions are invaluable to the project. The larger that OASIS grows the more useful it will be to everyone.
 
-A core tenant of this project wil be focusing on making everything user-friendly. It should be simple enough for undergraduates and researchers who have never seen a line of code before to make some use of. The protocols will of course still be robust, but clearly documented code and ease of use are paramount. The aim is to lower the barrier of entry for extremely replicable automated scientific work.
+A core tenet of this project will be focusing on making everything user-friendly. It should be simple enough for undergraduates and researchers who have never seen a line of code before to make some use of. The protocols will of course still be robust, but clearly documented code and ease of use are paramount. The aim is to lower the barrier of entry for extremely replicable automated scientific work.
 
 
