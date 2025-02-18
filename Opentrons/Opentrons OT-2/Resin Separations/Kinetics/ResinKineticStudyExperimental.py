@@ -64,37 +64,24 @@ def run(protocol: protocol_api.ProtocolContext):
     skip_mix = protocol.params.skip_mix
 
     # labware
+    tuberacks = [protocol.load_labware('opentrons_15_tuberack_falcon_15ml_conical', slot) for slot in [1, 2, 3]]
     tiprack = protocol.load_labware('opentrons_96_tiprack_300ul', 4)
-    tuberack1 = protocol.load_labware('opentrons_15_tuberack_falcon_15ml_conical', 1)
-    tuberack2 = protocol.load_labware('opentrons_15_tuberack_falcon_15ml_conical', 2)
-    tuberack3 = protocol.load_labware('opentrons_15_tuberack_falcon_15ml_conical', 3)
 
     # pipettes
     pipette = protocol.load_instrument('p300_single_gen2', 'left', tip_racks=[tiprack])
 
-
-    # reagents
-    source_tube_list = []
-    for i in range(number_of_source_tubes):
-        source_tube_list.append(tuberack1.wells()[i])
-
-    # all tubes
-    tubes_list = []
-    for i in range(15):
-        tubes_list.append(tuberack1.wells()[i])
-    for i in range(15):
-        tubes_list.append(tuberack2.wells()[i])
-    for i in range(15):
-        tubes_list.append(tuberack3.wells()[i])
+    # Define tube lists
+    source_tube_list = [tuberacks[0].wells()[i] for i in range(number_of_source_tubes)]
+    tubes_list = [well for rack in tuberacks for well in rack.wells()]
 
     ####################################################################
 
     for i in range(number_of_source_tubes):
         # If there is more than 3 source tubes add an increment to the tubes_list index
         take_sample_and_mix(pipette, source_tube_list[i], tubes_list[i + 3],
-                            lowest_depth, middle_depth, volume_for_transfer, volume_for_mixing, number_of_mixes, 
+                            lowest_depth, middle_depth, volume_for_transfer, volume_for_mixing, number_of_mixes,
                             skip_mix)
-    
+
     for x in range(number_samples):
         # Wait for a specified time
         protocol.delay(minutes=time_between_samples)
@@ -102,7 +89,7 @@ def run(protocol: protocol_api.ProtocolContext):
         for j in range(number_of_source_tubes):
             take_sample_and_mix(pipette, source_tube_list[j], tubes_list[3 * (x + 1) + j + 3], lowest_depth, middle_depth,
                                 volume_for_transfer, volume_for_mixing, number_of_mixes, skip_mix)
-        
+
 def take_sample_and_mix(pipette_name, source_tube, tube, lowest_depth, middle_depth, transfer_volume,
                         mix_volume, number_of_mixes, skip_mix):
 
@@ -113,7 +100,7 @@ def take_sample_and_mix(pipette_name, source_tube, tube, lowest_depth, middle_de
     pipette_name.aspirate(transfer_volume, source_tube.bottom(middle_depth))  # a little above the bottom of the well
     pipette_name.dispense(transfer_volume, tube.bottom(lowest_depth))  # at the bottom of the well
 
-    if skip_mix == False:
+    if not skip_mix:
         # Mix the solution in the source_tube, deep in the well
         pipette_name.move_to(source_tube.bottom(lowest_depth))  # Move to the lowest part of the well
         pipette_name.mix(number_of_mixes, mix_volume)  # mix
