@@ -1,5 +1,25 @@
+"""
+Author: Brison Cowan
+Description:
+
+This protocol is for the resin kinetic study. It is an experimental version of the protocol that is maximally modular.
+The user can specify the number of source tubes, the time between samples, the lowest and middle depths to aspirate from.
+
+The protocol is designed to be run on an Opentrons OT-2.
+
+The protocol performs the following steps:
+1. Initialize samples for source tubes.
+2. Wait for a specified time.
+3. Take the samples.
+4. Repeat steps 2 and 3 until the desired number of samples have been taken.
+
+The protocol uses the following labware in the specified configuration:
+-3 sets of 15 mL Falcon tubes in a 15-tube rack : Location 1, 2, 3
+-300 uL tips in a 96-tip rack : Location 4
+-P300 single-channel pipette
+"""
+
 from opentrons import protocol_api
-import math
 
 metadata = {
     'apiLevel': '2.18',
@@ -10,6 +30,7 @@ metadata = {
 
 
 def add_parameters(parameters: protocol_api.Parameters):
+    # This function
     parameters.add_float(variable_name='time_between_samples', display_name='Time between samples (minutes)',
                          description='Time between each sample collection', default=1, minimum=0, maximum=999)
     parameters.add_int(variable_name='number_of_source_tubes', display_name='Number of source tubes',
@@ -36,8 +57,7 @@ def run(protocol: protocol_api.ProtocolContext):
     volume_for_mixing = protocol.params.volume_for_mixing
     number_of_mixes = protocol.params.number_of_mixes
 
-    collections = 15-number_of_source_tubes    # number of collections taken after the initial samples.
-    number_of_timed_collection_columns = 13
+    number_of_timed_collection_columns = 15-number_of_source_tubes
 
     # labware
     tiprack = protocol.load_labware('opentrons_96_tiprack_300ul', 4)
@@ -66,17 +86,17 @@ def run(protocol: protocol_api.ProtocolContext):
     ####################################################################
 
     for i in range(number_of_source_tubes):
-        take_sample_and_mix(pipette, source_tube_list[i], tubes_list[i+3], lowest_depth, middle_depth,
-                            volume_for_transfer, volume_for_mixing, number_of_mixes)
+        # If there is more than 3 source tubes add an increment to the tubes_list index
+        take_sample_and_mix(pipette, source_tube_list[i], tubes_list[3 * (number_of_source_tubes // 3) + i],
+                            lowest_depth, middle_depth, volume_for_transfer, volume_for_mixing, number_of_mixes)
     
-    for x in range(number_of_timed_collection_columns - 2 * math.floor((number_of_source_tubes-1) / 3)):
+    for x in range(number_of_timed_collection_columns):
         # Wait for a specified time
         protocol.delay(minutes=time_between_samples)
 
         for j in range(number_of_source_tubes):
-            for i in range(number_of_source_tubes, collections):
-                take_sample_and_mix(pipette, source_tube_list[i], tubes_list[j+3], lowest_depth, middle_depth,
-                                    volume_for_transfer, volume_for_mixing, number_of_mixes)
+            take_sample_and_mix(pipette, source_tube_list[j], tubes_list[((x+1)*3)+3], lowest_depth, middle_depth,
+                                volume_for_transfer, volume_for_mixing, number_of_mixes)
         
 def take_sample_and_mix(pipette_name, source_tube, tube, lowest_depth, middle_depth, transfer_volume,
                         mix_volume, number_of_mixes):
