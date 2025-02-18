@@ -100,7 +100,7 @@ def run(protocol: protocol_api.ProtocolContext):
         protocol.delay(minutes=time_between_samples)
 
         for j in range(number_of_source_tubes):
-            take_sample_and_mix(pipette, source_tube_list[j], tubes_list[((x+1)*3)+j+3], lowest_depth, middle_depth,
+            take_sample_and_mix(pipette, source_tube_list[j], tubes_list[3 * (x + 1) + j + 3], lowest_depth, middle_depth,
                                 volume_for_transfer, volume_for_mixing, number_of_mixes, skip_mix)
         
 def take_sample_and_mix(pipette_name, source_tube, tube, lowest_depth, middle_depth, transfer_volume,
