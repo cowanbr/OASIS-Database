@@ -34,7 +34,7 @@ def add_parameters(parameters: protocol_api.Parameters):
     parameters.add_float(variable_name='time_between_samples', display_name='Time between samples (minutes)',
                          description='Time between each sample collection', default=1, minimum=0, maximum=999)
     parameters.add_int(variable_name='number_of_source_tubes', display_name='Number of source tubes',
-                       description='Number of source tubes for the experiment', default=3, minimum=1, maximum=15)
+                       description='Number of source tubes for the experiment', default=3, minimum=1, maximum=3)
     parameters.add_int(variable_name='lowest_depth', display_name='Lowest depth (mm)',
                        description='The lowest depth to aspirate from', default=1, minimum=0, maximum=100)
     parameters.add_int(variable_name='middle_depth', display_name='Middle depth (mm)',
@@ -46,6 +46,10 @@ def add_parameters(parameters: protocol_api.Parameters):
                        description='Volume to mix in the source tube', default=200, minimum=0, maximum=300)
     parameters.add_int(variable_name='number_of_mixes', display_name='Number of mixes',
                        description='Number of times to mix the source tube', default=3, minimum=1, maximum=10)
+    parameters.add_int(variable_name='number_samples', display_name='Number of samples to collect',
+                       description='Number of samples to collect (excluding t_0)', default=13, minimum=0, maximum=13)
+    parameters.add_bool(variable_name='skip_mix', display_name='Skip the mixing step?',
+                       description='Determines if we are going to mix the samples', default=False)
 
 def run(protocol: protocol_api.ProtocolContext):
     # Parameters
@@ -56,8 +60,8 @@ def run(protocol: protocol_api.ProtocolContext):
     volume_for_transfer = protocol.params.volume_for_transfer
     volume_for_mixing = protocol.params.volume_for_mixing
     number_of_mixes = protocol.params.number_of_mixes
-
-    number_of_timed_collection_columns = 15-number_of_source_tubes
+    number_samples = protocol.params.number_samples
+    skip_mix = protocol.params.skip_mix
 
     # labware
     tiprack = protocol.load_labware('opentrons_96_tiprack_300ul', 4)
@@ -87,19 +91,20 @@ def run(protocol: protocol_api.ProtocolContext):
 
     for i in range(number_of_source_tubes):
         # If there is more than 3 source tubes add an increment to the tubes_list index
-        take_sample_and_mix(pipette, source_tube_list[i], tubes_list[3 * (number_of_source_tubes // 3) + i],
-                            lowest_depth, middle_depth, volume_for_transfer, volume_for_mixing, number_of_mixes)
+        take_sample_and_mix(pipette, source_tube_list[i], tubes_list[i + 3],
+                            lowest_depth, middle_depth, volume_for_transfer, volume_for_mixing, number_of_mixes, 
+                            skip_mix)
     
-    for x in range(number_of_timed_collection_columns):
+    for x in range(number_samples):
         # Wait for a specified time
         protocol.delay(minutes=time_between_samples)
 
         for j in range(number_of_source_tubes):
-            take_sample_and_mix(pipette, source_tube_list[j], tubes_list[((x+1)*3)+3], lowest_depth, middle_depth,
-                                volume_for_transfer, volume_for_mixing, number_of_mixes)
+            take_sample_and_mix(pipette, source_tube_list[j], tubes_list[((x+1)*3)+j+3], lowest_depth, middle_depth,
+                                volume_for_transfer, volume_for_mixing, number_of_mixes, skip_mix)
         
 def take_sample_and_mix(pipette_name, source_tube, tube, lowest_depth, middle_depth, transfer_volume,
-                        mix_volume, number_of_mixes):
+                        mix_volume, number_of_mixes, skip_mix):
 
     # Pick up the pipette tip
     pipette_name.pick_up_tip()
@@ -108,13 +113,14 @@ def take_sample_and_mix(pipette_name, source_tube, tube, lowest_depth, middle_de
     pipette_name.aspirate(transfer_volume, source_tube.bottom(middle_depth))  # a little above the bottom of the well
     pipette_name.dispense(transfer_volume, tube.bottom(lowest_depth))  # at the bottom of the well
 
-    # Mix the solution in the source_tube, deep in the well
-    pipette_name.move_to(source_tube.bottom(lowest_depth))  # Move to the lowest part of the well
-    pipette_name.mix(number_of_mixes, mix_volume)  # mix
+    if skip_mix == False:
+        # Mix the solution in the source_tube, deep in the well
+        pipette_name.move_to(source_tube.bottom(lowest_depth))  # Move to the lowest part of the well
+        pipette_name.mix(number_of_mixes, mix_volume)  # mix
 
-    # Mix the solution in the source_tube, in the middle of the well
-    pipette_name.move_to(source_tube.bottom(middle_depth))  # Move to the middle of the well
-    pipette_name.mix(number_of_mixes, mix_volume)  # mix
+        # Mix the solution in the source_tube, in the middle of the well
+        pipette_name.move_to(source_tube.bottom(middle_depth))  # Move to the middle of the well
+        pipette_name.mix(number_of_mixes, mix_volume)  # mix
 
     # Dump the pipette tip
     pipette_name.drop_tip()
