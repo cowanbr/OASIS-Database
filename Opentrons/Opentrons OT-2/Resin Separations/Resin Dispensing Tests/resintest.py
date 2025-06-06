@@ -4,7 +4,6 @@ Description:
 
 This protocol is to test resin transfer capabilities in solution using an Opentrons OT-2.
 """
-
 from opentrons import protocol_api
 
 metadata = {
@@ -31,7 +30,7 @@ def add_parameters(parameters: protocol_api.Parameters):
 def run(protocol: protocol_api.ProtocolContext):
     # labware
     tiprack = protocol.load_labware('opentrons_96_tiprack_1000ul', 4)
-    tuberack1 = protocol.load_labware('opentrons_6_tuberack_falcon_50ml_conical', 1)
+    tuberack1 = protocol.load_labware('opentrons_15_tuberack_falcon_15ml_conical', 1)
     tuberack2 = protocol.load_labware('opentrons_15_tuberack_falcon_15ml_conical', 2)
 
     # pipettes
@@ -40,12 +39,11 @@ def run(protocol: protocol_api.ProtocolContext):
     # resin mixture well
     input = tuberack1.wells()[0]
 
-    # output well
+    # output wells
     output1 = tuberack2.wells()[0]
     output2 = tuberack2.wells()[1]
-    output3 = tuberack2.wells()[2]
 
-    output_wells = [output1, output2, output3]
+    output_wells = [output1, output2]
 
     ####################################################################
     
@@ -59,18 +57,18 @@ def run(protocol: protocol_api.ProtocolContext):
     # Pick up the pipette tip
     pipette.pick_up_tip()
 
-    for tube in output_wells:
-    source_tube = input  # The source tube is the input tube for all transfers
-    tube = output_wells[i]
+    for i in output_wells:
+        source_tube = input  # The source tube is the input tube for all transfers
+        tube = i
 
         # Mix the solution in the input, deep in the well
-        pipette_name.move_to(source_tube.bottom(lowest_depth))  # Move to the lowest part of the well
-        pipette_name.mix(number_of_mixes, volume_for_mixing)  # mix
+        pipette.move_to(source_tube.bottom(lowest_depth))  # Move to the lowest part of the well
+        pipette.mix(number_of_mixes, volume_for_mixing)  # mix
 
         # Transfer from input to output
-        pipette_name.aspirate(volume_for_transfer, source_tube.bottom(middle_depth))  # a little above the bottom of the well
-        pipette_name.dispense(volume_for_transfer, tube.bottom(lowest_depth))  # at the bottom of the well
-        pipette_name.blow_out(tube.top())
+        pipette.aspirate(volume_for_transfer, source_tube.bottom(middle_depth))  # a little above the bottom of the well
+        pipette.dispense(volume_for_transfer, tube.bottom(lowest_depth))  # at the bottom of the well
+        pipette.blow_out(tube.top())
     
     # Dump the pipette tip
-    pipette_name.drop_tip()
+    pipette.drop_tip()
